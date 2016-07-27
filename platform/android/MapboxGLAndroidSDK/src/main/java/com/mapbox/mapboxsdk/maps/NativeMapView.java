@@ -470,6 +470,10 @@ final class NativeMapView {
         return nativeGetCameraValues(mNativeMapViewPtr);
     }
 
+    public void renderToOffscreen(){
+        nativeRenderToOffscreen(mNativeMapViewPtr);
+    }
+
     //
     // Callbacks
     //
@@ -645,4 +649,6 @@ final class NativeMapView {
     private native void nativeRemoveCustomLayer(long nativeMapViewPtr, String id);
 
     private native double[] nativeGetCameraValues(long mNativeMapViewPtr);
+
+    private native void nativeRenderToOffscreen(long nativeMapViewPtr);
 }

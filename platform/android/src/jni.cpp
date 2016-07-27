@@ -105,6 +105,13 @@ jni::jfieldID* customLayerInitializeFunctionId = nullptr;
 jni::jfieldID* customLayerRenderFunctionId = nullptr;
 jni::jfieldID* customLayerDeinitializeFunctionId = nullptr;
 
+jni::jclass* bitmapClass = nullptr;
+jni::jmethodID* bitmapCreateBitmapId = nullptr;
+jni::jmethodID* bitmapCopyPixelsFromBufferId = nullptr;
+
+jni::jclass* bitmapConfigClass = nullptr;
+jni::jmethodID* bitmapConfigValueOfId = nullptr;
+
 // Offline declarations start
 
 jni::jfieldID* offlineManagerClassPtrId = nullptr;
@@ -1085,6 +1092,34 @@ void nativeRemoveCustomLayer(JNIEnv *env, jni::jobject* obj, jlong nativeMapView
     nativeMapView->getMap().removeLayer(std_string_from_jstring(env, id));
 }
 
+void nativeRenderToOffscreen(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr) {
+    mbgl::Log::Error(mbgl::Event::JNI, "nativeRenderToOffscreen");
+    assert(nativeMapViewPtr != 0);
+    NativeMapView *nativeMapView = reinterpret_cast<NativeMapView *>(nativeMapViewPtr);
+    uint8_t *pixels = nativeMapView->renderToOffScreen();
+    if(pixels != 0) {
+        mbgl::Log::Error(mbgl::Event::Android, "NativeMapView::nativeRenderToOffscreen::pixelsAreNot0");
+
+        // Create Bitmap.Config
+        std::string config = "ARGB_8888";
+        jni::jobject* jbitmapConfig = jni::CallStaticMethod<jni::jobject*>(*env, *bitmapConfigClass, *bitmapConfigValueOfId, std_string_to_jstring(env, config));
+        assert(jbitmapConfig != 0);
+
+        // Create bitmap
+        jint width = nativeMapView->getWidth();
+        jint height = nativeMapView->getHeight();
+        jni::jobject* jbitmapObject = jni::CallStaticMethod<jni::jobject*>(*env, *bitmapClass, *bitmapCreateBitmapId, width, height, jbitmapConfig);
+
+        // Copy pixels from buffer into bitmap
+        jni::CallMethod<void>(*env, jbitmapObject, *bitmapCopyPixelsFromBufferId, pixels);
+        assert(jbitmapObject != 0);
+
+        mbgl::Log::Error(mbgl::Event::Android, "NativeMapView::nativeRenderToOffscreen::EndRender");
+    }else{
+        mbgl::Log::Error(mbgl::Event::Android, "NativeMapView::pixelsAre=0");
+    }
+}
+
 // Offline calls begin
 
 jlong createDefaultFileSource(JNIEnv *env, jni::jobject* obj, jni::jstring* cachePath_, jni::jstring* assetRoot_, jlong maximumCacheSize) {
@@ -1619,6 +1654,15 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     customLayerRenderFunctionId = &jni::GetFieldID(env, *customLayerClass, "mRenderFunction", "J");
     customLayerDeinitializeFunctionId = &jni::GetFieldID(env, *customLayerClass, "mDeinitializeFunction", "J");
 
+    bitmapClass = &jni::FindClass(env, "android/graphics/Bitmap");
+    bitmapClass = jni::NewGlobalRef(env, bitmapClass).release();
+    bitmapCreateBitmapId = &jni::GetStaticMethodID(env, *bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+    bitmapCopyPixelsFromBufferId = &jni::GetMethodID(env, *bitmapClass, "copyPixelsFromBuffer", "(java/nio/Buffer;)V");
+
+    bitmapConfigClass = &jni::FindClass(env, "android/graphics/Bitmap$Config");
+    bitmapConfigClass = jni::NewGlobalRef(env, bitmapConfigClass).release();
+    bitmapConfigValueOfId = &jni::GetStaticMethodID(env, *bitmapConfigClass, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
+
     jni::jclass& nativeMapViewClass = jni::FindClass(env, "com/mapbox/mapboxsdk/maps/NativeMapView");
 
     onInvalidateId = &jni::GetMethodID(env, nativeMapViewClass, "onInvalidate", "()V");
@@ -1699,7 +1743,8 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         MAKE_NATIVE_METHOD(nativeFlyTo, "(JDDDJDD)V"),
         MAKE_NATIVE_METHOD(nativeAddCustomLayer, "(JLcom/mapbox/mapboxsdk/layers/CustomLayer;Ljava/lang/String;)V"),
         MAKE_NATIVE_METHOD(nativeRemoveCustomLayer, "(JLjava/lang/String;)V"),
-        MAKE_NATIVE_METHOD(nativeSetContentPadding, "(JDDDD)V")
+        MAKE_NATIVE_METHOD(nativeSetContentPadding, "(JDDDD)V"),
+        MAKE_NATIVE_METHOD(nativeRenderToOffscreen, "(J)V")
     );
 
     // Offline begin

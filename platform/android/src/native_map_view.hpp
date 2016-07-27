@@ -49,6 +49,10 @@ public:
     mbgl::EdgeInsets getInsets() { return insets;}
     void setInsets(mbgl::EdgeInsets insets_);
 
+    int getWidth();
+    int getHeight();
+    uint8_t* renderToOffScreen();
+
 private:
     EGLConfig chooseConfig(const EGLConfig configs[], EGLint numConfigs);
 

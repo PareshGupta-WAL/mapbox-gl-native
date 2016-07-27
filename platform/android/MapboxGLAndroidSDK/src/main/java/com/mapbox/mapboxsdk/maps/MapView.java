@@ -21,6 +21,7 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.opengl.GLES20;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.FloatRange;
@@ -87,9 +88,15 @@ import com.mapbox.mapboxsdk.telemetry.MapboxEvent;
 import com.mapbox.mapboxsdk.telemetry.MapboxEventManager;
 import com.mapbox.mapboxsdk.utils.ColorUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -197,7 +204,7 @@ public class MapView extends FrameLayout {
 
         // Reference the TextureView
         SurfaceView surfaceView = (SurfaceView) view.findViewById(R.id.surfaceView);
-        
+
         // Check if we are in Android Studio UI editor to avoid error in layout preview
         if (isInEditMode()) {
             return;
@@ -1362,12 +1369,15 @@ public class MapView extends FrameLayout {
         return mNativeMapView.getScale();
     }
 
+    private SurfaceHolder holder;
+
     private class SurfaceCallback implements SurfaceHolder.Callback {
 
         private Surface mSurface;
 
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
+            MapView.this.holder = holder;
             mNativeMapView.createSurface(mSurface = holder.getSurface());
             mHasSurface = true;
         }
@@ -1801,7 +1811,7 @@ public class MapView extends FrameLayout {
                 return false;
             }
 
-         //   requestDisallowInterceptTouchEvent(true);
+            //   requestDisallowInterceptTouchEvent(true);
 
             // reset tracking modes if gesture occurs
             resetTrackingModesIfRequired();
@@ -2641,19 +2651,8 @@ public class MapView extends FrameLayout {
 
     @UiThread
     void snapshot(@NonNull final MapboxMap.SnapshotReadyCallback callback, @Nullable final Bitmap bitmap) {
-//        TextureView textureView = (TextureView) findViewById(R.id.textureView);
-//        final boolean canUseBitmap = bitmap != null && textureView.getWidth() == bitmap.getWidth() && textureView.getHeight() == bitmap.getHeight();
-//
-//        setDrawingCacheEnabled(true);
-//        Bitmap content = Bitmap.createBitmap(getDrawingCache());
-//        setDrawingCacheEnabled(false);
-//
-//        Bitmap output = Bitmap.createBitmap(content.getWidth(), content.getHeight(), Bitmap.Config.ARGB_8888);
-//        Canvas canvas = new Canvas(output);
-//        canvas.drawBitmap(canUseBitmap ? textureView.getBitmap(bitmap) : textureView.getBitmap(), 0, 0, null);
-//        canvas.drawBitmap(content, new Matrix(), null);
-//        callback.onSnapshotReady(output);
-        throw new RuntimeException("TextureView code needs to be migrated to SurfaceView");
+        Log.e(MapboxConstants.TAG,"snaphsot");
+        mNativeMapView.renderToOffscreen();
     }
 
     //

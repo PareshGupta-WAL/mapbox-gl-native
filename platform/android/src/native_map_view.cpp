@@ -436,6 +436,14 @@ void NativeMapView::destroySurface() {
     }
 }
 
+uint8_t* NativeMapView::renderToOffScreen() {
+    mbgl::Log::Debug(mbgl::Event::Android, "NativeMapView::renderToOffScreen");
+    size_t size = width * height;
+    uint8_t *pixels = new uint8_t[size];
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    return pixels;
+}
+
 // Speed
 /*
 typedef enum {
@@ -700,6 +708,14 @@ void NativeMapView::resizeFramebuffer(int w, int h) {
 
 void NativeMapView::setInsets(mbgl::EdgeInsets insets_) {
     insets = insets_;
+}
+
+int NativeMapView::getWidth(){
+    return width;
+}
+
+int NativeMapView::getHeight(){
+    return height;
 }
 
 }
