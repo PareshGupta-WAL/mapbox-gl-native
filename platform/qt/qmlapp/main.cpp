@@ -4,6 +4,7 @@
 #include <qqml.h>
 
 #include <QQuickMapboxGL>
+#include <QQuickMapboxStyleProperty>
 
 int main(int argc, char *argv[])
 {
@@ -14,6 +15,7 @@ int main(int argc, char *argv[])
 #endif
 
     qmlRegisterType<QQuickMapboxGL>("QQuickMapboxGL", 1, 0, "QQuickMapboxGL");
+    qmlRegisterType<QQuickMapboxStyleProperty>("QQuickMapboxGL", 1, 0, "QQuickMapboxStyleProperty");
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

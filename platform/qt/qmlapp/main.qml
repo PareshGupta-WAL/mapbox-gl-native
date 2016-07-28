@@ -14,10 +14,19 @@ ApplicationWindow {
     visible: true
 
     ColorDialog {
-        id: colorDialog
+        id: backgroundColorDialog
         title: "Background color"
         visible: false
         color: "black"
+    }
+
+    ColorDialog {
+        id: waterColorDialog
+        title: "Water color"
+        visible: false
+        onAccepted: {
+            mapStreets.setPaintProperty("water", "fill-color", color);
+        }
     }
 
     RowLayout {
@@ -59,8 +68,17 @@ ApplicationWindow {
                     bearing: bearingSlider.value
                     pitch: pitchSlider.value
 
-                    color: colorDialog.currentColor
+                    color: backgroundColorDialog.currentColor
                     copyrightsVisible: true
+
+                    QQuickMapboxStyleProperty {
+                        type: QQuickMapboxStyleProperty.Paint
+                        layer: "water"
+                        property: "fill-color"
+                        value: Qt.rgba(1, 0, 0, 1)
+                        //onPaintReady: mapStreets.setPaintProperty(layer, property, value);
+                        setMap: mapStreets
+                    }
 
                     Image {
                         id: logo
@@ -232,9 +250,13 @@ ApplicationWindow {
             }
 
             Button {
-                id: colorChangeButton
                 text: "Change background color"
-                onClicked: colorDialog.open()
+                onClicked: backgroundColorDialog.open()
+            }
+
+            Button {
+                text: "Change water color"
+                onClicked: waterColorDialog.open()
             }
         }
     }

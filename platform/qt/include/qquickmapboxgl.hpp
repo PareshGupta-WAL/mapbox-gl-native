@@ -34,6 +34,19 @@ class Q_DECL_EXPORT QQuickMapboxGL : public QQuickFramebufferObject
     Q_PROPERTY(qreal pitch READ pitch WRITE setPitch NOTIFY pitchChanged)
 
 public:
+    struct LayoutPropertyChange {
+        QString layer;
+        QString property;
+        QVariant value;
+    };
+
+    struct PaintPropertyChange {
+        QString layer;
+        QString property;
+        QVariant value;
+        QString klass;
+    };
+
     QQuickMapboxGL(QQuickItem *parent = 0);
     virtual ~QQuickMapboxGL();
 
@@ -68,6 +81,11 @@ public:
     QColor color() const;
 
     Q_INVOKABLE void pan(int dx, int dy);
+    Q_INVOKABLE void setLayoutProperty(const QString &layer, const QString &property, const QVariant &value);
+    Q_INVOKABLE void setPaintProperty(const QString &layer, const QString &property, const QVariant &value, const QString &klass = QString());
+
+    QList<LayoutPropertyChange>& layoutPropertyChanges() { return m_layoutChanges; }
+    QList<PaintPropertyChange>& paintPropertyChanges() { return m_paintChanges; }
 
     // MapboxGL QML Type interface.
     void setStyle(const QString &style);
@@ -82,14 +100,16 @@ public:
     QPointF swapPan();
 
     enum SyncState {
-        NothingNeedsSync = 0,
-        ZoomNeedsSync    = 1 << 0,
-        CenterNeedsSync  = 1 << 1,
-        StyleNeedsSync   = 1 << 2,
-        PanNeedsSync     = 1 << 3,
-        BearingNeedsSync = 1 << 4,
-        PitchNeedsSync   = 1 << 5,
-        ColorNeedsSync   = 1 << 6,
+        NothingNeedsSync        = 0,
+        ZoomNeedsSync           = 1 << 0,
+        CenterNeedsSync         = 1 << 1,
+        StyleNeedsSync          = 1 << 2,
+        PanNeedsSync            = 1 << 3,
+        BearingNeedsSync        = 1 << 4,
+        PitchNeedsSync          = 1 << 5,
+        ColorNeedsSync          = 1 << 6,
+        LayoutPropertyNeedsSync = 1 << 7,
+        PaintPropertyNeedsSync  = 1 << 8,
     };
 
     int swapSyncState();
@@ -124,6 +144,8 @@ private:
     QGeoCoordinate m_center;
     QGeoShape m_visibleRegion;
     QColor m_color = Qt::black;
+    QList<LayoutPropertyChange> m_layoutChanges;
+    QList<PaintPropertyChange> m_paintChanges;
 
     QString m_style;
     qreal m_bearing = 0;

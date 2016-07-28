@@ -76,7 +76,23 @@ void QQuickMapboxGLRenderer::synchronize(QQuickFramebufferObject *item)
         m_map->setPitch(quickMap->pitch());
     }
 
-    if (syncStatus & QQuickMapboxGL::ColorNeedsSync && m_map->isFullyLoaded()) {
-        m_map->setPaintProperty("background", "background-color", quickMap->color());
+    if (m_map->isFullyLoaded()) {
+        if (syncStatus & QQuickMapboxGL::ColorNeedsSync) {
+            m_map->setPaintProperty("background", "background-color", quickMap->color());
+        }
+
+        if (syncStatus & QQuickMapboxGL::LayoutPropertyNeedsSync) {
+            for (const auto& change: quickMap->layoutPropertyChanges()) {
+                m_map->setLayoutProperty(change.layer, change.property, change.value);
+            }
+            quickMap->layoutPropertyChanges().clear();
+        }
+
+        if (syncStatus & QQuickMapboxGL::PaintPropertyNeedsSync) {
+            for (const auto& change: quickMap->paintPropertyChanges()) {
+                m_map->setPaintProperty(change.layer, change.property, change.value, change.klass);
+            }
+            quickMap->paintPropertyChanges().clear();
+        }
     }
 }

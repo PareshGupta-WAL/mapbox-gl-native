@@ -175,6 +175,24 @@ void QQuickMapboxGL::pan(int dx, int dy)
     update();
 }
 
+void QQuickMapboxGL::setLayoutProperty(const QString &layer, const QString &property, const QVariant &value)
+{
+    LayoutPropertyChange change { layer, property, value };
+    m_layoutChanges << change;
+
+    m_syncState |= LayoutPropertyNeedsSync;
+    update();
+}
+
+void QQuickMapboxGL::setPaintProperty(const QString &layer, const QString &property, const QVariant &value, const QString &klass)
+{
+    PaintPropertyChange change { layer, property, value, klass };
+    m_paintChanges << change;
+
+    m_syncState |= PaintPropertyNeedsSync;
+    update();
+}
+
 void QQuickMapboxGL::setStyle(const QString &styleUrl)
 {
     if (m_style == styleUrl) {
