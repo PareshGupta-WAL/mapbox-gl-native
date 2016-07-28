@@ -2,6 +2,7 @@ package com.mapbox.mapboxsdk.maps;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Build;
@@ -470,8 +471,8 @@ final class NativeMapView {
         return nativeGetCameraValues(mNativeMapViewPtr);
     }
 
-    public void renderToOffscreen(){
-        nativeRenderToOffscreen(mNativeMapViewPtr);
+    public Bitmap renderToOffscreen(){
+        return nativeRenderToOffscreen(mNativeMapViewPtr);
     }
 
     //
@@ -650,5 +651,5 @@ final class NativeMapView {
 
     private native double[] nativeGetCameraValues(long mNativeMapViewPtr);
 
-    private native void nativeRenderToOffscreen(long nativeMapViewPtr);
+    private native Bitmap nativeRenderToOffscreen(long nativeMapViewPtr);
 }

@@ -436,12 +436,13 @@ void NativeMapView::destroySurface() {
     }
 }
 
-uint8_t* NativeMapView::renderToOffScreen() {
+std::vector<uint8_t> NativeMapView::renderToOffScreen() {
     mbgl::Log::Debug(mbgl::Event::Android, "NativeMapView::renderToOffScreen");
     size_t size = width * height;
     uint8_t *pixels = new uint8_t[size];
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    return pixels;
+    std::vector<uint8_t> output(pixels, pixels + size);
+    return output;
 }
 
 // Speed

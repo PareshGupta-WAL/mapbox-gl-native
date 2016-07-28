@@ -51,7 +51,7 @@ public:
 
     int getWidth();
     int getHeight();
-    uint8_t* renderToOffScreen();
+    std::vector<uint8_t> renderToOffScreen();
 
 private:
     EGLConfig chooseConfig(const EGLConfig configs[], EGLint numConfigs);

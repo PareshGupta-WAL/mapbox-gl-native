@@ -2652,7 +2652,8 @@ public class MapView extends FrameLayout {
     @UiThread
     void snapshot(@NonNull final MapboxMap.SnapshotReadyCallback callback, @Nullable final Bitmap bitmap) {
         Log.e(MapboxConstants.TAG,"snaphsot");
-        mNativeMapView.renderToOffscreen();
+        Bitmap bitmap1 = mNativeMapView.renderToOffscreen();
+        callback.onSnapshotReady(bitmap1);
     }
 
     //
