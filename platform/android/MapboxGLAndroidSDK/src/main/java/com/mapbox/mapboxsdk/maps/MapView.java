@@ -23,6 +23,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
 import android.support.annotation.FloatRange;
 import android.support.annotation.IntDef;
@@ -93,10 +95,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -1350,6 +1354,9 @@ public class MapView extends FrameLayout {
         mNativeMapView.render();
     }
 
+    private int width;
+    private int height;
+
     @Override
     protected void onSizeChanged(int width, int height, int oldw, int oldh) {
         if (mDestroyed) {
@@ -1357,7 +1364,7 @@ public class MapView extends FrameLayout {
         }
 
         if (!isInEditMode()) {
-            mNativeMapView.resizeView((int) (width / mScreenDensity), (int) (height / mScreenDensity));
+            mNativeMapView.resizeView(this.width = (int) (width / mScreenDensity), this.height = (int) (height / mScreenDensity));
         }
     }
 
@@ -2651,9 +2658,49 @@ public class MapView extends FrameLayout {
 
     @UiThread
     void snapshot(@NonNull final MapboxMap.SnapshotReadyCallback callback, @Nullable final Bitmap bitmap) {
-        Log.e(MapboxConstants.TAG,"snaphsot");
-        Bitmap bitmap1 = mNativeMapView.renderToOffscreen();
-        callback.onSnapshotReady(bitmap1);
+        Log.e(MapboxConstants.TAG, "snaphsot");
+        ByteBuffer buffer = mNativeMapView.renderToOffscreen();
+        Bitmap b = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+//        Bitmap b = Bitmap.createBitmap((int)(getWidth() / mScreenDensity), (int)(getHeight() / mScreenDensity), Bitmap.Config.ARGB_8888);
+        b.copyPixelsFromBuffer(buffer);
+        if(saveImageToExternalStorage(b)){
+            Log.e(MapboxConstants.TAG, "Image saved to disk");
+        }else{
+            Log.e(MapboxConstants.TAG, "Image not saved to disk");
+        }
+        // callback.onSnapshotReady(bitmap1);
+        ;
+        callback.onSnapshotReady(b);
+    }
+
+
+    public boolean saveImageToExternalStorage(Bitmap image) {
+        String fullPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/test/";
+
+        try {
+            File dir = new File(fullPath);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            OutputStream fOut = null;
+            File file = new File(fullPath, "desiredFilename.png");
+            file.createNewFile();
+            fOut = new FileOutputStream(file);
+
+// 100 means no compression, the lower you go, the stronger the compression
+            image.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+            fOut.flush();
+            fOut.close();
+
+            MediaStore.Images.Media.insertImage(getContext().getContentResolver(), file.getAbsolutePath(), file.getName(), file.getName());
+
+            return true;
+
+        } catch (Exception e) {
+            Log.e("saveToExternalStorage()", e.getMessage());
+            return false;
+        }
     }
 
     //

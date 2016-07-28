@@ -18,6 +18,7 @@ import com.mapbox.mapboxsdk.geometry.ProjectedMeters;
 import com.mapbox.mapboxsdk.layers.CustomLayer;
 import com.mapbox.mapboxsdk.offline.OfflineManager;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 // Class that wraps the native methods for convenience
@@ -471,7 +472,7 @@ final class NativeMapView {
         return nativeGetCameraValues(mNativeMapViewPtr);
     }
 
-    public Bitmap renderToOffscreen(){
+    public ByteBuffer renderToOffscreen(){
         return nativeRenderToOffscreen(mNativeMapViewPtr);
     }
 
@@ -651,5 +652,5 @@ final class NativeMapView {
 
     private native double[] nativeGetCameraValues(long mNativeMapViewPtr);
 
-    private native Bitmap nativeRenderToOffscreen(long nativeMapViewPtr);
+    private native ByteBuffer nativeRenderToOffscreen(long nativeMapViewPtr);
 }

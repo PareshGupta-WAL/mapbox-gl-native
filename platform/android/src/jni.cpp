@@ -114,6 +114,7 @@ jni::jmethodID* bitmapConfigValueOfId = nullptr;
 
 jni::jclass* byteBufferClass = nullptr;
 jni::jmethodID* byteBufferWrapId = nullptr;
+jni::jmethodID* byteBufferRewindId = nullptr;
 
 // Offline declarations start
 
@@ -1117,12 +1118,16 @@ jni::jobject* nativeRenderToOffscreen(JNIEnv *env, jni::jobject* obj, jlong nati
         // Convert bytes into a buffer
         jni::jobject* jbytebuffer = jni::CallStaticMethod<jni::jobject*>(*env, *byteBufferClass, *byteBufferWrapId, metadata_from_native(env, pixels));
         assert(jbytebuffer!=0);
+        return jbytebuffer;
+
+        // rewind buffer
+        //jni::jobject* jbytebufferRewind = jni::CallMethod<jni::jobject*>(*env, jbytebuffer, *byteBufferRewindId);
 
         // Copy pixels from bugger
-        jni::CallMethod<void>(*env, jbitmapObject, *bitmapCopyPixelsFromBufferId, jbytebuffer);
+        //jni::CallMethod<void>(*env, jbitmapObject, *bitmapCopyPixelsFromBufferId, jbytebufferRewind);
 
-        mbgl::Log::Error(mbgl::Event::Android, "NativeMapView::nativeRenderToOffscreen::EndRender");
-        return jbitmapObject;
+        //mbgl::Log::Error(mbgl::Event::Android, "NativeMapView::nativeRenderToOffscreen::EndRender");
+        //return jbitmapObject;
     }else{
         mbgl::Log::Error(mbgl::Event::Android, "NativeMapView::pixelsAre=0");
     }
@@ -1675,6 +1680,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     byteBufferClass = &jni::FindClass(env, "java/nio/ByteBuffer");
     byteBufferClass = jni::NewGlobalRef(env, byteBufferClass).release();
     byteBufferWrapId = &jni::GetStaticMethodID(env, *byteBufferClass, "wrap", "([B)Ljava/nio/ByteBuffer;");
+    byteBufferRewindId = &jni::GetMethodID(env, *byteBufferClass, "rewind", "()Ljava/nio/Buffer;");
 
     jni::jclass& nativeMapViewClass = jni::FindClass(env, "com/mapbox/mapboxsdk/maps/NativeMapView");
 
@@ -1757,7 +1763,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         MAKE_NATIVE_METHOD(nativeAddCustomLayer, "(JLcom/mapbox/mapboxsdk/layers/CustomLayer;Ljava/lang/String;)V"),
         MAKE_NATIVE_METHOD(nativeRemoveCustomLayer, "(JLjava/lang/String;)V"),
         MAKE_NATIVE_METHOD(nativeSetContentPadding, "(JDDDD)V"),
-        MAKE_NATIVE_METHOD(nativeRenderToOffscreen, "(J)Landroid/graphics/Bitmap;")
+        MAKE_NATIVE_METHOD(nativeRenderToOffscreen, "(J)Ljava/nio/ByteBuffer;")
     );
 
     // Offline begin
