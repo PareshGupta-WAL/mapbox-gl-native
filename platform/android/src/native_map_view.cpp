@@ -18,6 +18,9 @@
 #include <mbgl/gl/gl.hpp>
 #include <mbgl/util/constants.hpp>
 
+#include <boost/lexical_cast.hpp>
+
+
 namespace mbgl {
 namespace android {
 
@@ -436,13 +439,20 @@ void NativeMapView::destroySurface() {
     }
 }
 
-std::vector<uint8_t> NativeMapView::renderToOffScreen() {
-    mbgl::Log::Debug(mbgl::Event::Android, "NativeMapView::renderToOffScreen");
-    size_t size = width * height;
-    uint8_t *pixels = new uint8_t[size];
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    std::vector<uint8_t> output(pixels, pixels + size);
-    return output;
+mbgl::PremultipliedImage NativeMapView::renderToOffScreen() {
+    const unsigned int w = fbWidth;
+    const unsigned int h = fbHeight;
+    mbgl::PremultipliedImage image { w, h };
+    MBGL_CHECK_ERROR(glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, image.data.get()));
+    const size_t stride = image.stride();
+    auto tmp = std::make_unique<uint8_t[]>(stride);
+    uint8_t *rgba = image.data.get();
+    for (int i = 0, j = h - 1; i < j; i++, j--) {
+        std::memcpy(tmp.get(), rgba + i * stride, stride);
+        std::memcpy(rgba + i * stride, rgba + j * stride, stride);
+        std::memcpy(rgba + j * stride, tmp.get(), stride);
+    }
+    return image;
 }
 
 // Speed

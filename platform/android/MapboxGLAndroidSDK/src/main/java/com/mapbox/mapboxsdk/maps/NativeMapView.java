@@ -472,7 +472,7 @@ final class NativeMapView {
         return nativeGetCameraValues(mNativeMapViewPtr);
     }
 
-    public ByteBuffer renderToOffscreen(){
+    public String renderToOffscreen() {
         return nativeRenderToOffscreen(mNativeMapViewPtr);
     }
 
@@ -600,6 +600,8 @@ final class NativeMapView {
 
     private native void nativeUpdateMarker(long nativeMapViewPtr, long markerId, double lat, double lon, String iconId);
 
+    private native void nativeUpdatePolygon(long nativeMapViewPtr, long polygonId, List<LatLng> points);
+
     private native long[] nativeAddMarkers(long nativeMapViewPtr, Marker[] markers);
 
     private native long[] nativeAddPolylines(long mNativeMapViewPtr, Polyline[] polylines);
@@ -639,7 +641,7 @@ final class NativeMapView {
     private native LatLng nativeLatLngForPixel(long nativeMapViewPtr, float x, float y);
 
     private native double nativeGetTopOffsetPixelsForAnnotationSymbol(long nativeMapViewPtr, String symbolName);
-    
+
     private native void nativeJumpTo(long nativeMapViewPtr, double angle, double latitude, double longitude, double pitch, double zoom);
 
     private native void nativeEaseTo(long nativeMapViewPtr, double angle, double latitude, double longitude, long duration, double pitch, double zoom, boolean easingInterpolator);
@@ -652,5 +654,5 @@ final class NativeMapView {
 
     private native double[] nativeGetCameraValues(long mNativeMapViewPtr);
 
-    private native ByteBuffer nativeRenderToOffscreen(long nativeMapViewPtr);
+    private native String nativeRenderToOffscreen(long nativeMapViewPtr);
 }

@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -2659,13 +2660,20 @@ public class MapView extends FrameLayout {
     @UiThread
     void snapshot(@NonNull final MapboxMap.SnapshotReadyCallback callback, @Nullable final Bitmap bitmap) {
         Log.e(MapboxConstants.TAG, "snaphsot");
-        ByteBuffer buffer = mNativeMapView.renderToOffscreen();
-        Bitmap b = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+        String buffer = mNativeMapView.renderToOffscreen();
+
+        byte[] bytes = buffer.getBytes();
+
+        for (byte b :bytes) {
+            Log.e(MapboxConstants.TAG, "" + b);
+        }
+
+        Bitmap b = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
+
 //        Bitmap b = Bitmap.createBitmap((int)(getWidth() / mScreenDensity), (int)(getHeight() / mScreenDensity), Bitmap.Config.ARGB_8888);
-        b.copyPixelsFromBuffer(buffer);
-        if(saveImageToExternalStorage(b)){
+        if (saveImageToExternalStorage(b)) {
             Log.e(MapboxConstants.TAG, "Image saved to disk");
-        }else{
+        } else {
             Log.e(MapboxConstants.TAG, "Image not saved to disk");
         }
         // callback.onSnapshotReady(bitmap1);

@@ -51,7 +51,7 @@ public:
 
     int getWidth();
     int getHeight();
-    std::vector<uint8_t> renderToOffScreen();
+    mbgl::PremultipliedImage renderToOffScreen();
 
 private:
     EGLConfig chooseConfig(const EGLConfig configs[], EGLint numConfigs);
