@@ -2459,23 +2459,11 @@ public class MapView extends FrameLayout {
     // Called when the snapshot method was executed
     // Called via JNI from NativeMapView
     // Forward to any listeners
-    protected void onSnapshotReady(String encodedPng) {
-        if(mSnapshotReadyCallback!=null && encodedPng!=null) {
-            byte[] bytes = encodedPng.getBytes();
-            for (byte b : bytes) {
-                Log.e(MapboxConstants.TAG, "" + b);
-            }
-
-            Bitmap b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-
-            if (saveImageToExternalStorage(b)) {
-                Log.e(MapboxConstants.TAG, "Image saved to disk");
-            } else {
-                Log.e(MapboxConstants.TAG, "Image not saved to disk");
-            }
-
-            if(mSnapshotReadyCallback!=null){
-                mSnapshotReadyCallback.onSnapshotReady(b);
+    protected void onSnapshotReady(byte[] bytes) {
+        if (mSnapshotReadyCallback != null && bytes != null) {
+            Bitmap snapshot = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            if (mSnapshotReadyCallback != null && snapshot != null) {
+                mSnapshotReadyCallback.onSnapshotReady(snapshot);
             }
         }
     }

@@ -198,7 +198,9 @@ void NativeMapView::render() {
     map->render();
 
     if(snapshot){
-         mbgl::Log::Error(mbgl::Event::JNI, "SNAPSHOT");
+         snapshot = false;
+
+         // take snapshot
          const unsigned int w = fbWidth;
          const unsigned int h = fbHeight;
          mbgl::PremultipliedImage image { w, h };
@@ -212,12 +214,13 @@ void NativeMapView::render() {
             std::memcpy(rgba + j * stride, tmp.get(), stride);
          }
 
-         assert(vm != nullptr);
-         assert(obj != nullptr);
-
+         // encode and convert to jbytes
          std::string string = encodePNG(image);
+         jbyteArray arr = env->NewByteArray(string.length());
+         env->SetByteArrayRegion(arr,0,string.length(),(jbyte*)string.c_str());
 
-         env->CallVoidMethod(obj, onSnapshotReadyId, jni::Make<jni::String>(*env, string).Get());
+         // invoke Mapview#OnSnapshotReady
+         env->CallVoidMethod(obj, onSnapshotReadyId, arr);
          if (env->ExceptionCheck()) {
              env->ExceptionDescribe();
          }

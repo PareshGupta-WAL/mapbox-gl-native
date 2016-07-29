@@ -492,6 +492,10 @@ final class NativeMapView {
         mMapView.onFpsChanged(fps);
     }
 
+    protected void onSnapshotReady(byte[] bytes){
+        mMapView.onSnapshotReady(bytes);
+    }
+
     //
     // JNI methods
     //
