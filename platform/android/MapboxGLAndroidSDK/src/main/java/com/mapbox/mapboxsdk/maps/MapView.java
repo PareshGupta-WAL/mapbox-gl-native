@@ -170,6 +170,7 @@ public class MapView extends FrameLayout {
     private String mInitalStyle;
 
     private List<OnMapReadyCallback> mOnMapReadyCallbackList;
+    private MapboxMap.SnapshotReadyCallback mSnapshotReadyCallback;
 
     @UiThread
     public MapView(@NonNull Context context) {
@@ -2455,6 +2456,30 @@ public class MapView extends FrameLayout {
         }
     }
 
+    // Called when the snapshot method was executed
+    // Called via JNI from NativeMapView
+    // Forward to any listeners
+    protected void onSnapshotReady(String encodedPng) {
+        if(mSnapshotReadyCallback!=null && encodedPng!=null) {
+            byte[] bytes = encodedPng.getBytes();
+            for (byte b : bytes) {
+                Log.e(MapboxConstants.TAG, "" + b);
+            }
+
+            Bitmap b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+
+            if (saveImageToExternalStorage(b)) {
+                Log.e(MapboxConstants.TAG, "Image saved to disk");
+            } else {
+                Log.e(MapboxConstants.TAG, "Image not saved to disk");
+            }
+
+            if(mSnapshotReadyCallback!=null){
+                mSnapshotReadyCallback.onSnapshotReady(b);
+            }
+        }
+    }
+
     //
     // User location
     //
@@ -2659,26 +2684,9 @@ public class MapView extends FrameLayout {
 
     @UiThread
     void snapshot(@NonNull final MapboxMap.SnapshotReadyCallback callback, @Nullable final Bitmap bitmap) {
-        Log.e(MapboxConstants.TAG, "snaphsot");
-        String buffer = mNativeMapView.renderToOffscreen();
-
-        byte[] bytes = buffer.getBytes();
-
-        for (byte b :bytes) {
-            Log.e(MapboxConstants.TAG, "" + b);
-        }
-
-        Bitmap b = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
-
-//        Bitmap b = Bitmap.createBitmap((int)(getWidth() / mScreenDensity), (int)(getHeight() / mScreenDensity), Bitmap.Config.ARGB_8888);
-        if (saveImageToExternalStorage(b)) {
-            Log.e(MapboxConstants.TAG, "Image saved to disk");
-        } else {
-            Log.e(MapboxConstants.TAG, "Image not saved to disk");
-        }
-        // callback.onSnapshotReady(bitmap1);
-        ;
-        callback.onSnapshotReady(b);
+        Log.e(MapboxConstants.TAG, "snapshot requested");
+        mSnapshotReadyCallback = callback;
+        mNativeMapView.scheduleTakeSnapshot();
     }
 
 

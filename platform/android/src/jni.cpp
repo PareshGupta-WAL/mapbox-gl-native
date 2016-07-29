@@ -42,6 +42,7 @@ std::string androidRelease;
 jni::jmethodID* onInvalidateId = nullptr;
 jni::jmethodID* onMapChangedId = nullptr;
 jni::jmethodID* onFpsChangedId = nullptr;
+jni::jmethodID* onSnapshotReadyId = nullptr;
 
 jni::jclass* latLngClass = nullptr;
 jni::jmethodID* latLngConstructorId = nullptr;
@@ -1096,14 +1097,11 @@ void nativeRemoveCustomLayer(JNIEnv *env, jni::jobject* obj, jlong nativeMapView
     nativeMapView->getMap().removeLayer(std_string_from_jstring(env, id));
 }
 
-jni::jstring*  nativeRenderToOffscreen(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr) {
+void nativeScheduleTakeSnapshot(JNIEnv *env, jni::jobject* obj, jlong nativeMapViewPtr) {
     mbgl::Log::Error(mbgl::Event::JNI, "nativeRenderToOffscreen");
     assert(nativeMapViewPtr != 0);
     NativeMapView *nativeMapView = reinterpret_cast<NativeMapView *>(nativeMapViewPtr);
-    mbgl::PremultipliedImage image = nativeMapView->renderToOffScreen();
-    std::string string = encodePNG(image);
-    mbgl::Log::Error(mbgl::Event::JNI, "nativeRenderToOffscreen 2 "+ string);
-    return std_string_to_jstring(env, string);
+    nativeMapView->scheduleTakeSnapshot();
 }
 
 // Offline calls begin
@@ -1659,6 +1657,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     onInvalidateId = &jni::GetMethodID(env, nativeMapViewClass, "onInvalidate", "()V");
     onMapChangedId = &jni::GetMethodID(env, nativeMapViewClass, "onMapChanged", "(I)V");
     onFpsChangedId = &jni::GetMethodID(env, nativeMapViewClass, "onFpsChanged", "(D)V");
+    onSnapshotReadyId = &jni::GetMethodID(env, nativeMapViewClass, "onSnapshotReady","(Ljava/lang/String;)V");
 
     #define MAKE_NATIVE_METHOD(name, sig) jni::MakeNativeMethod<decltype(name), name>( #name, sig )
 
@@ -1735,8 +1734,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         MAKE_NATIVE_METHOD(nativeAddCustomLayer, "(JLcom/mapbox/mapboxsdk/layers/CustomLayer;Ljava/lang/String;)V"),
         MAKE_NATIVE_METHOD(nativeRemoveCustomLayer, "(JLjava/lang/String;)V"),
         MAKE_NATIVE_METHOD(nativeSetContentPadding, "(JDDDD)V"),
-        MAKE_NATIVE_METHOD(nativeRenderToOffscreen, "(J)Ljava/lang/String;"),
-        MAKE_NATIVE_METHOD(nativeUpdatePolygon, "(JJLjava/util/List;)V")
+        MAKE_NATIVE_METHOD(nativeScheduleTakeSnapshot, "(J)V")
     );
 
     // Offline begin

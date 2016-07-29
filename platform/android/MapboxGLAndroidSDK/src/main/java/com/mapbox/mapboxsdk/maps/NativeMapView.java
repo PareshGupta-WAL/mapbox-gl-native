@@ -472,8 +472,8 @@ final class NativeMapView {
         return nativeGetCameraValues(mNativeMapViewPtr);
     }
 
-    public String renderToOffscreen() {
-        return nativeRenderToOffscreen(mNativeMapViewPtr);
+    public void scheduleTakeSnapshot() {
+        nativeScheduleTakeSnapshot(mNativeMapViewPtr);
     }
 
     //
@@ -654,5 +654,5 @@ final class NativeMapView {
 
     private native double[] nativeGetCameraValues(long mNativeMapViewPtr);
 
-    private native String nativeRenderToOffscreen(long nativeMapViewPtr);
+    private native void nativeScheduleTakeSnapshot(long nativeMapViewPtr);
 }

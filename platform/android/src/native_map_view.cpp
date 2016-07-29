@@ -197,6 +197,32 @@ void NativeMapView::render() {
 
     map->render();
 
+    if(snapshot){
+         mbgl::Log::Error(mbgl::Event::JNI, "SNAPSHOT");
+         const unsigned int w = fbWidth;
+         const unsigned int h = fbHeight;
+         mbgl::PremultipliedImage image { w, h };
+         MBGL_CHECK_ERROR(glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, image.data.get()));
+         const size_t stride = image.stride();
+         auto tmp = std::make_unique<uint8_t[]>(stride);
+         uint8_t *rgba = image.data.get();
+         for (int i = 0, j = h - 1; i < j; i++, j--) {
+            std::memcpy(tmp.get(), rgba + i * stride, stride);
+            std::memcpy(rgba + i * stride, rgba + j * stride, stride);
+            std::memcpy(rgba + j * stride, tmp.get(), stride);
+         }
+
+         assert(vm != nullptr);
+         assert(obj != nullptr);
+
+         std::string string = encodePNG(image);
+
+         env->CallVoidMethod(obj, onSnapshotReadyId, jni::Make<jni::String>(*env, string).Get());
+         if (env->ExceptionCheck()) {
+             env->ExceptionDescribe();
+         }
+    }
+
     if ((display != EGL_NO_DISPLAY) && (surface != EGL_NO_SURFACE)) {
         if (!eglSwapBuffers(display, surface)) {
             mbgl::Log::Error(mbgl::Event::OpenGL, "eglSwapBuffers() returned error %d",
@@ -439,20 +465,8 @@ void NativeMapView::destroySurface() {
     }
 }
 
-mbgl::PremultipliedImage NativeMapView::renderToOffScreen() {
-    const unsigned int w = fbWidth;
-    const unsigned int h = fbHeight;
-    mbgl::PremultipliedImage image { w, h };
-    MBGL_CHECK_ERROR(glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, image.data.get()));
-    const size_t stride = image.stride();
-    auto tmp = std::make_unique<uint8_t[]>(stride);
-    uint8_t *rgba = image.data.get();
-    for (int i = 0, j = h - 1; i < j; i++, j--) {
-        std::memcpy(tmp.get(), rgba + i * stride, stride);
-        std::memcpy(rgba + i * stride, rgba + j * stride, stride);
-        std::memcpy(rgba + j * stride, tmp.get(), stride);
-    }
-    return image;
+void NativeMapView::scheduleTakeSnapshot() {
+    snapshot = true;
 }
 
 // Speed

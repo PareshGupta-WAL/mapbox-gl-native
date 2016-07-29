@@ -51,7 +51,7 @@ public:
 
     int getWidth();
     int getHeight();
-    mbgl::PremultipliedImage renderToOffScreen();
+    void scheduleTakeSnapshot();
 
 private:
     EGLConfig chooseConfig(const EGLConfig configs[], EGLint numConfigs);
@@ -83,6 +83,7 @@ private:
     bool firstTime = false;
     bool fpsEnabled = false;
     bool sizeChanged = false;
+    bool snapshot = false;
     double fps = 0.0;
 
     int width = 0;
